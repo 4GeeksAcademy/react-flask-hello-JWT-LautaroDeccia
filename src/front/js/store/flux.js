@@ -1,4 +1,5 @@
 import { Register } from "../pages/register";
+import Swal from 'sweetalert2'
 
 const getState = ({ getStore, getActions, setStore }) => {
 	return {
@@ -9,6 +10,7 @@ const getState = ({ getStore, getActions, setStore }) => {
 		},
 		actions: {
 			profile: async () => {
+				const store = getStore();
 				const requestOptions = {
 					method: "GET",
 					headers: {
@@ -22,6 +24,7 @@ const getState = ({ getStore, getActions, setStore }) => {
 
 					if (response.status === 200) {
 						setStore({ dataUser: data.result });
+						console.log(store.dataUser);
 					} else if (response.status === 400) {
 						throw new Error('Bad Request: ' + data.msg);
 					} else if (response.status === 500) {
@@ -34,7 +37,7 @@ const getState = ({ getStore, getActions, setStore }) => {
 				}
 			},
 			register: async (email, password) => {
-				console.log(email, password);
+				const store = getStore();
 				const options = {
 					method: 'POST',
 					headers: {
@@ -51,6 +54,11 @@ const getState = ({ getStore, getActions, setStore }) => {
 					const data = await response.json();
 
 					if (response.status === 200) {
+						console.log(data);
+						Swal.fire({
+							text: "El registro del usuario se ha realizado con éxito.",
+							icon: "success"
+						  });
 						return true;
 					} else if (response.status === 400) {
 						throw new Error('Bad Request: ' + data.msg);
@@ -61,12 +69,19 @@ const getState = ({ getStore, getActions, setStore }) => {
 					}
 				} catch (error) {
 					console.log('Fetch error: ', error);
+					Swal.fire({
+						title: 'Error!',
+						text: 'La dirección de correo electrónico ya existe',
+						icon: 'error',
+						confirmButtonText: 'Cool'
+					  })
 					return false;
 				}
 			},
 			login: async (email, password) => {
 				const store = getStore();
 				localStorage.setItem('token', null);
+				console.log(email);
 				const options = {
 					method: 'POST',
 					headers: {
@@ -83,7 +98,9 @@ const getState = ({ getStore, getActions, setStore }) => {
 					const data = await response.json();
 
 					if (response.status === 200) {
+						console.log(data);
 						localStorage.setItem('token', data.token);
+						console.log(email);
 						setStore({ currentUser: { email: email } });
 						setStore({ logged: true });
 						return true;
@@ -96,10 +113,37 @@ const getState = ({ getStore, getActions, setStore }) => {
 					}
 				} catch (error) {
 					console.log('Fetch error: ', error);
+					Swal.fire({
+						title: 'Error!',
+						text: 'La dirección de correo electrónico o la contraseña son incorrectas.',
+						icon: 'error',
+						confirmButtonText: 'Cool'
+					  })
 					return false;
 				}
 			},
+		
+			// validToken: async () => {
+			// 	const store = getStore()
+			// 	const token = localStorage.getItem('token')
+			// 	const options = {
+			// 		headers: {
+			// 			'Content-Type': 'application/json',
+			// 			'Authorization': `Bearer ${token}`,
+			// 		}
+			// 	}
+			// 	const response = await fetch('https://glorious-chainsaw-g475p49xxqxhpwqr-3001.app.github.dev/api/valid-token', options)
+			// 	const data = await response.json()
+			// 	console.log(data)
+			// 	if (data.logged) {
+			// 		console.log('token válido y user logeado')
+			// 		return true
+			// 	}
+			// 	console.log('token no válido y user no logeado')
+			// 	return false
+			// },
 			validToken: async () => {
+				const store = getStore();
 				const token = localStorage.getItem('token');
 				const options = {
 					headers: {
